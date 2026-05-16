@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "everythingkorean:block/serpentine_deepslate_ore"
+  }
+}

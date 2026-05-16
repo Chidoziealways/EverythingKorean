@@ -1,0 +1,8 @@
+{
+  "values": {
+    "everythingkorean:ramyeon": {
+      "can_villager_compost": true,
+      "chance": 1.0
+    }
+  }
+}

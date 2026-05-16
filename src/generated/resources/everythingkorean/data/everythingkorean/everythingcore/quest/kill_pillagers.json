@@ -1,0 +1,17 @@
+{
+  "dependency": "everythingkorean:air",
+  "description": "Kill 5 Pillagers",
+  "id": "everythingkorean:kill_pillagers",
+  "rewards": [
+    {
+      "id": "everythingkorean:pillager"
+    }
+  ],
+  "stages": [
+    {
+      "completeWhenId": "everythingkorean:pillager",
+      "objective": "Kill 5 Pillagers"
+    }
+  ],
+  "title": "Kill Pillagers"
+}

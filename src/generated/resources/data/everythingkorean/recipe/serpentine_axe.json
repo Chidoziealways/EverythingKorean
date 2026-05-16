@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": "everythingkorean:serpentine",
+    "B": "minecraft:stick"
+  },
+  "pattern": [
+    "AA ",
+    "AB ",
+    " B "
+  ],
+  "result": {
+    "count": 1,
+    "id": "everythingkorean:serpentine_axe"
+  }
+}

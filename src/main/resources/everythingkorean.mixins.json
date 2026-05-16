@@ -1,16 +1,14 @@
 {
-  "required": true,
-  "minVersion": "0.8",
-  "package": "net.Chidoziealways.everythingkorean.mixin",
+  "client": [],
   "compatibilityLevel": "JAVA_21",
-  "mixins": [
-  ],
-  "client": [
-  ],
   "injectors": {
     "defaultRequire": 1
   },
-  "overwrites": {
-    "requireAnnotations": true
-  }
+  "minVersion": "0.8",
+  "mixins": [
+
+  ],
+  "package": "net.Chidoziealways.everythingkorean.mixin",
+  "refmap": "everythingkorean.refmap.json",
+  "required": true
 }

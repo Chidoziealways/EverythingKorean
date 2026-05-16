@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:paper",
+    "minecraft:egg",
+    "minecraft:wheat",
+    "minecraft:cooked_porkchop"
+  ],
+  "result": {
+    "count": 1,
+    "id": "everythingkorean:tteokbokki"
+  }
+}

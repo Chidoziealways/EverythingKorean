@@ -1,0 +1,17 @@
+{
+  "dependency": "everythingkorean:kill_pillagers",
+  "description": "Kill 15 Zombies",
+  "id": "everythingkorean:kill_zombies",
+  "rewards": [
+    {
+      "id": "everythingkorean:zombie"
+    }
+  ],
+  "stages": [
+    {
+      "completeWhenId": "everythingkorean:zombie",
+      "objective": "Kill 15 Zombies"
+    }
+  ],
+  "title": "Kill Zombies"
+}

@@ -1,0 +1,24 @@
+{
+  "layers": {
+    "wolf_body": [
+      {
+        "texture": "everythingkorean:serpentine"
+      }
+    ],
+    "horse_body": [
+      {
+        "texture": "everythingkorean:serpentine"
+      }
+    ],
+    "humanoid": [
+      {
+        "texture": "everythingkorean:serpentine"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "everythingkorean:serpentine"
+      }
+    ]
+  }
+}

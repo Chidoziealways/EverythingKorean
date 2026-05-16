@@ -1,176 +1,233 @@
+import com.modrinth.minotaur.dependencies.DependencyType
+import com.modrinth.minotaur.dependencies.ModDependency
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
+import net.neoforged.moddevgradle.tasks.JarJar
+import org.jetbrains.kotlin.gradle.utils.extendsFrom
+
+
 plugins {
-    id 'java-library'
-    id 'maven-publish'
-    id 'idea'
-    id 'net.neoforged.moddev' version '2.0.107'
-    id 'org.jetbrains.kotlin.jvm' version '2.0.0'
+    id("convention")
+
+    alias(libs.plugins.minotaur)
+    alias(libs.plugins.curseforgegradle)
+    alias(libs.plugins.moddevgradle)
 }
 
-version = mod_version
-group = mod_group_id
+val modId: String by project
 
-repositories {
-    mavenLocal()
-    maven {
-        name = 'Kotlin for Forge'
-        url = 'https://thedarkcolour.github.io/KotlinForForge/'
-        content { includeGroup "thedarkcolour" }
-    }
-}
+val minecraftVersion = libs.versions.minecraft.asProvider().get()
+
+val modGroupId: String by project
+
+version = libs.versions.everythingkorean.get() + "-" + minecraftVersion
+group = modGroupId
+
+val jarJarConfig by configurations.creating
+
+configurations.getByName("implementation").extendsFrom(jarJarConfig)
 
 base {
-    archivesName = mod_id
+    archivesName = modId
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-kotlin.jvmToolchain(21)
+val libraries by configurations.creating
 
 neoForge {
-    // Specify the version of NeoForge to use.
-    version = project.neo_version
+    version = libs.versions.neoforge.asProvider().get()
 
     parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
+        mappingsVersion = "2025.09.14"
+        minecraftVersion = "1.21.8"
     }
 
-    // This line is optional. Access Transformers are automatically detected
-    // accessTransformers.add('src/main/resources/META-INF/accesstransformer.cfg')
+    mods {
+        create(modId) {
+            sourceSet(sourceSets.main.get())
+        }
+    }
 
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
+    validateAccessTransformers = true
+
     runs {
-        client {
-            client()
-
-            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        // Custom client run
+        create("customClient") {
+            client() // Sets type = "client"
+            gameDirectory.set(project.layout.projectDirectory.dir("runs/client"))
+            systemProperty("neoforge.enableGameTest", "true")
+            programArguments.addAll(listOf(
+                "-mixin.config=everythingkorean.mixins.json"
+            ))
         }
 
-        server {
-            server()
-            programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        // Custom data generator run
+        create("runCustomClientData") {
+            clientData() // type = "clientData"
+            gameDirectory.set(project.layout.projectDirectory.dir("runs/clientData"))
+            programArguments.addAll(listOf(
+                "--mod", "everythingkorean",
+                "--all",
+                "--output", file("src/generated/resources").absolutePath,
+                "--existing", file("src/main/resources").absolutePath,
+                "-mixin.config=everythingkorean.mixins.json"
+            ))
         }
 
-        // This run config launches GameTestServer and runs all registered gametests, then exits.
-        // By default, the server will crash when no gametests are provided.
-        // The gametest system is also enabled by default for other run configs under the /test command.
-        gameTestServer {
-            type = "gameTestServer"
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        // Custom dedicated server run
+        create("runCustomServer") {
+            server() // type = "server"
+            gameDirectory.set(project.layout.projectDirectory.dir("runs/server"))
+            programArguments.add("--nogui")
         }
 
-        data {
-            clientData()
-
-            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
-            // gameDirectory = project.file('run-data')
-
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
-
-        // applies to all the run configs above
         configureEach {
             // Recommended logging data for a userdev environment
             // The markers can be added/remove as needed separated by commas.
             // "SCAN": For mods scan.
             // "REGISTRIES": For firing of registry events.
             // "REGISTRYDUMP": For getting the contents of all registries.
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty("forge.logging.markers", "REGISTRIES")
 
             // Recommended logging level for the console
             // You can set various levels here.
             // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
             logLevel = org.slf4j.event.Level.DEBUG
-        }
-    }
-
-    mods {
-        // define mod <-> source bindings
-        // these are used to tell the game which sources are for which mod
-        // mostly optional in a single mod project
-        // but multi mod projects should define one per mod
-        "${mod_id}" {
-            sourceSet(sourceSets.main)
+            additionalRuntimeClasspathConfiguration.extendsFrom(libraries)
         }
     }
 }
 
-// Include resources generated by data generators.
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+sourceSets {
+    getByName("main") {
 
+        resources.srcDir("src/generated/resources/$modId")
+    }
+}
+
+repositories {
+    mavenLocal()
+    // Forge and Maven Central included automatically
+    maven {
+        name = "Jared's maven"
+        url = uri("https://maven.blamejared.com/")
+    }
+    maven {
+        name = "ModMaven"
+        url = uri("https://modmaven.dev")
+    }
+    maven {
+        name = "GeckoLib"
+        url = uri("https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/")
+    }
+
+    maven {
+        name = "Kotlin for Forge"
+        url = uri("https://thedarkcolour.github.io/KotlinForForge/")
+    }
+
+}
 
 dependencies {
-    implementation 'thedarkcolour:kotlinforforge-neoforge:5.3.0'
+    if (System.getProperty("idea.sync.active") != "true")
+        annotationProcessor(variantOf(libs.mixin) { classifier("processor") })
 
-    // Example mod dependency with JEI
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
-    // compileOnly "mezz.jei:jei-${mc_version}-forge-api:${jei_version}"
-    // runtimeOnly "mezz.jei:jei-${mc_version}-forge:${jei_version}"
+    implementation(libs.jopt.simple)
 
-    // Example mod dependency using a mod jar from ./libs with a flat dir repository
-    // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
-    // The group id is ignored when searching -- in this case, it is "blank"
-    // implementation "blank:coolmod-${mc_version}:${coolmod_version}"
+    //implementation("net.Chidoziealways.everythingjapanese:everythingjapanese:1.17.0-1.21.8")
 
-    // Example mod dependency using a file as dependency
-    // implementation files("libs/coolmod-${mc_version}-${coolmod_version}.jar")
+    implementation("net.Chidoziealways.everythingcore:EverythingCore:5.1.0")
 
-    // Example project dependency using a sister or child project:
-    // implementation project(":myproject")
-
-    // For more info:
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    // Uncomment and add if you want those libs
+    // implementation(fg.deobf("com.github.glitchfiend:TerraBlender-forge:$minecraftVersion-$terrablender_version"))
+    implementation("software.bernie.geckolib:geckolib-neoforge-1.21.10:5.3-alpha-1")
 }
 
-// This block of code expands all declared replace properties in the specified resource targets.
-// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
-var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
-    var replaceProperties = [minecraft_version      : minecraft_version,
-                             minecraft_version_range: minecraft_version_range,
-                             neo_version            : neo_version,
-                             neo_version_range      : neo_version_range,
-                             loader_version_range   : loader_version_range,
-                             mod_id                 : mod_id,
-                             mod_name               : mod_name,
-                             mod_license            : mod_license,
-                             mod_version            : mod_version,
-                             mod_authors            : mod_authors,
-                             mod_description        : mod_description]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from "src/main/templates"
-    into "build/generated/sources/modMetadata"
+tasks.named<Jar>("jar").configure {
+    archiveClassifier.set("slim")
 }
 
-// Include the output of "generateModMetadata" as an input directory for the build
-// this works with both building through Gradle and the IDE.
-sourceSets.main.resources.srcDir generateModMetadata
-// To avoid having to run "generateModMetadata" manually, make it run on every project reload
-neoForge.ideSyncTask generateModMetadata
+val jarJarTask by tasks.registering(JarJar::class) {
+    description = "Embed Dependencies into the Mod Jar"
+    group = "build"
 
-// Example configuration to allow publishing using the maven-publish plugin
+    configuration(jarJarConfig)
+
+    outputDirectory.set(layout.buildDirectory.dir("embed"))
+}
+
+tasks.jar {
+    dependsOn(jarJarTask)
+    from(jarJarTask.flatMap { it.outputDirectory })
+}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN") ?: "Invalid/No API Token Found"
+    projectId = "bj3FpcD7"
+    versionType = "beta"
+    versionNumber.set(project.version.toString())
+    versionName = "Everything Korean ${project.version}"
+    uploadFile.set(tasks.jar.flatMap { it.archiveFile })
+    changelog.set(rootProject.file("changelog.md").readText(Charsets.UTF_8))
+    gameVersions.set(listOf(minecraftVersion))
+    dependencies.add(ModDependency("geckolib", DependencyType.REQUIRED))
+    dependencies.add(ModDependency("everything-core", DependencyType.REQUIRED))
+    loaders.set(listOf("neoforge"))
+
+    //https://github.com/modrinth/minotaur#available-properties
+}
+
+tasks.register<TaskPublishCurseForge>("publishToCurseForge") {
+    group = "publishing"
+    apiToken = System.getenv("CURSEFORGE_TOKEN") ?: "Invalid/No API Token Found"
+    doFirst {
+        println("CurseForge: " + System.getenv("CURSEFORGE_TOKEN"))
+    }
+
+    val mainFile = upload(1354276, tasks.jar.flatMap { it.archiveFile })
+    mainFile.releaseType = "beta"
+    mainFile.addModLoader("NeoForge")
+    mainFile.addGameVersion(minecraftVersion)
+    mainFile.addEnvironment("Client", "Server")
+    mainFile.addJavaVersion("Java 22")
+    mainFile.changelogType = "markdown"
+    mainFile.changelog = rootProject.file("changelog.md").readText(Charsets.UTF_8)
+}
+
 publishing {
     publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
+        create<MavenPublication>("everythingkorean") {
+            from(components["java"])
+            artifactId = base.archivesName.get()
         }
     }
     repositories {
+        mavenLocal() // <-- local repo (~/.m2/repository)
         maven {
-            url "file://${project.projectDir}/repo"
+            url = uri("${project.buildDir}/repo")
         }
+        // Or remote server
+        // maven {
+        //     url = uri("https://my.maven.repo/releases")
+        //     credentials {
+        //         username = "user"
+        //         password = "pass"
+        //     }
+        // }
     }
 }
 
-// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
-    }
+
+tasks.named<DefaultTask>("publish").configure {
+    finalizedBy("modrinth")
+    finalizedBy("publishToCurseForge")
+}
+
+sourceSets.all {
+    val dir = layout.buildDirectory.dir("sourcesSets/$name")
+    output.setResourcesDir(dir)
+    java.destinationDirectory.set(dir)
+    kotlin.destinationDirectory.set(dir)
+}
+
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn(tasks.named("processResources"))
 }

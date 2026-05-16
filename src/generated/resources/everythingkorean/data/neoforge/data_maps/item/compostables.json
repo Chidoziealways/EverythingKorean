@@ -1,0 +1,16 @@
+{
+  "values": {
+    "everythingkorean:kimchi": {
+      "can_villager_compost": true,
+      "chance": 1.0
+    },
+    "everythingkorean:ramyeon": {
+      "can_villager_compost": true,
+      "chance": 1.0
+    },
+    "everythingkorean:tteokbokki": {
+      "can_villager_compost": true,
+      "chance": 1.0
+    }
+  }
+}

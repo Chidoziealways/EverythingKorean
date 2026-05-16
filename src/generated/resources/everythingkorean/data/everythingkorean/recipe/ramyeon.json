@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:wheat",
+    "B": "minecraft:bowl",
+    "K": "minecraft:kelp",
+    "W": "minecraft:potion"
+  },
+  "pattern": [
+    " K ",
+    " A ",
+    " BW"
+  ],
+  "result": {
+    "count": 1,
+    "id": "everythingkorean:ramyeon"
+  }
+}
